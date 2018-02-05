@@ -10,23 +10,86 @@
          online at your node.js address under /socket.io/socket.io.js 
          You can disable that on the server if desired
     -->
+    <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-	<style>
+	<script  type="text/babel">
+    
+        var userName; 
+        const connectSocket = (e) => {
+          const message = document.querySelector("#message");
+            const chat = document.querySelector("#chat");
+             
+            const socket = io.connect(); 
+           
+            socket.on('connect', () => {
+               let user = document.querySelector("#username").value;
+                if(!user){
+                    user = 'unknown';
+                }
+                
+                userName = user;
+                socket.emit('join', {name:user}); 
+            });
+            
+ 
+            socket.on('msg', (data) => {
+               console.log(data); 
+                chat.append("\n" + data.name + ": " + data.msg);
+            });
+            
+            socket.on('me', (data) =>{
+               chat.append("\n**" + data.name + data.msg.substr(3) + "**"); 
+            });
+            
+            socket.on('tableflip', (data) => {
+               chat.append("\n" + data.name + ": (╯°□°）╯︵ ┻━┻"); 
+            });
+            
+            socket.on('unflip', (data) => {
+               chat.append("\n" + data.name + ": ┬─┬ ノ( ゜-゜ノ)"); 
+            });
+            
+            // Set up sending info
+            const send = document.querySelector("#send");
+            send.addEventListener('click', () => { 
+                socket.emit('msgToServer', {name:userName, msg:message.value});
+            });
+            
+            const update= document.querySelector("#updatename");
+            update.addEventListener('click', () => {
+                socket.emit('changeUsername', {name:document.querySelector("#username").value});
+                userName = document.querySelector("#username").value;
+            });
+        };
+ 
+
+        const init = () =>{
+            const connect = document.querySelector("#connect");
+            connect.addEventListener('click',connectSocket); 
+        };
+
+        window.onload = init;
+    
+    </script>
+    <style>
 		textarea {
 			display: block;
 			background-color: #EEEEEE;
 		}
 	</style>
+    <meta charset="UTF-8">
 </head>
 <body>
 	<label for="user">Username:</label>
 	<input id="username" name="user" type="text"/>
 	<input id="connect" type='button' value='connect'/>
+	<input id="updatename" type='button' value='Update Name'/>
 	<br/>
 	<label for="message">Message:</label>
 	<input id="message" name="message" type="text"/>
 	<input id="send" type="button" value="send" />
 	
 	<textarea id="chat" rows="20" cols="40" readonly> </textarea>
+    <p>/tableflip <br/>/unflip <br/>/me [anything]</p>
 </body>
 </html>
